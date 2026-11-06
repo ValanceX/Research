@@ -67,20 +67,39 @@ export type DiscoveryFailure =
  *
  * | `ok`    | `refs` / `partial`  | meaning                                              |
  * |---------|---------------------|------------------------------------------------------|
- * | `true`  | `refs` non-empty    | complete retrieval: every page needed was fetched    |
+ * | `true`  | `refs` non-empty    | retrieval finished: every page needed for `limit` was fetched |
  * | `true`  | `refs` empty        | search succeeded, zero matches                       |
  * | `false` | no `partial`        | failed, nothing retrieved                            |
  * | `false` | `partial` non-empty | failed mid-pagination; `partial` are valid but INCOMPLETE |
  *
- * `ok: true` always means retrieval was complete. Partial data is never returned
+ * `ok: true` always means retrieval finished. Partial data is never returned
  * under `ok: true`; callers must opt in to it by reading `partial` on a failure.
+ *
+ * `ok: true` does NOT mean exhaustive coverage. Three independent things limit
+ * how much of "everything that matches" you hold:
+ *
+ *  1. `limit` — we stop once we have this many refs. `totalMatches > refs.length`
+ *     means GitHub reports more matches than you asked for.
+ *  2. GitHub's search ceiling — the Search API only ever serves the first 1,000
+ *     hits of a query, however large `totalMatches` is. Even `limit: 1000` cannot
+ *     reach match 1,001. To cover more, narrow the query (e.g. split by
+ *     `createdBetween`) and run several. De-duplication can also leave
+ *     `refs.length` under `limit` when the ceiling is reached.
+ *  3. `sourceIncomplete` — GitHub's own search timed out and may have skipped
+ *     matches inside what it returned. Unrelated to 1 and 2.
+ *
+ * A caller that needs to know "did I see everything?" must check all three:
+ * `refs.length === totalMatches` (and `totalMatches <= 1000`) and `!sourceIncomplete`.
  */
 export type DiscoveryResult =
   | {
       ok: true;
       /** De-duplicated, at most `query.limit`. Empty array = successful search, no matches. */
       refs: DiscoveryRef[];
-      /** Total matches the source claims exist (may exceed refs.length). */
+      /**
+       * GitHub's `total_count` for the query. May exceed `refs.length` (limit) and may
+       * exceed 1,000 even though only the first 1,000 are retrievable.
+       */
       totalMatches: number;
       /**
        * GitHub's own `incomplete_results` flag: its search timed out server-side, so

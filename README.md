@@ -37,11 +37,25 @@ if (result.ok) {
 }
 ```
 
-`ok: true` always means retrieval finished. Interrupted paging is `ok: false` with `partial` set, so partial data can never be mistaken for a complete result. Discovery does not retry or resume; re-run the query if you want the rest. Scope: issues and pull requests only.
+`ok: true` always means retrieval finished — **not** that you have every matching record. Interrupted paging is `ok: false` with `partial` set, so partial data can never be mistaken for a complete result. Discovery does not retry or resume; re-run the query if you want the rest. Scope: issues and pull requests only.
 
 The contract lives in [`src/contracts/discovery.ts`](src/contracts/discovery.ts) and is documented inline. `discoverGithub(query, { token?, fetch? })` — both options default to `process.env.GITHUB_TOKEN` and global `fetch`.
 
 Rate limits are **reported, not waited out**: a `rate_limited` failure carries `retryAfterSeconds` / `resetAt`, and successes carry the remaining quota. Retrying is the caller's decision.
+
+## What "successful" does and doesn't mean
+
+Three separate limits apply; don't conflate them.
+
+| Signal | Where | Meaning |
+|---|---|---|
+| **`limit`** | your input | We stop after this many refs. If `totalMatches > refs.length`, GitHub reports more matches than you asked for. |
+| **1,000-result ceiling** | GitHub Search API | Only the first 1,000 hits of any query are ever served, even if `totalMatches` is 40,000. `limit: 1000` cannot reach hit 1,001. To cover more, split the query (e.g. several `createdBetween` windows) and run each. |
+| **`sourceIncomplete`** | result | GitHub's own `incomplete_results`: its search timed out and may have skipped matches *within* what it returned. Says nothing about our paging. |
+
+Interrupted paging is a fourth, different case: it's `ok: false` + `partial`, never `ok: true`.
+
+To check you saw everything the query matches: `totalMatches <= 1000 && refs.length === totalMatches && !sourceIncomplete`. Otherwise treat the result as a sample. Discovery does not set a "complete" flag, because that answer is derived from these fields.
 
 ## Layout
 
