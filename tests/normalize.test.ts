@@ -64,6 +64,20 @@ describe("pull request", () => {
     });
   });
 
+  it("closedAt and mergedAt are preserved independently when they differ", async () => {
+    const r = await retrieved("pull_request", { ...pull, closed_at: "2026-03-05T10:00:00Z", merged_at: "2026-03-04T09:30:00Z" });
+    if (!r.ok) throw new Error();
+    // Guard the premise: the retrieved values really differ.
+    expect(r.source.meta.closedAt).toBe("2026-03-05T10:00:00Z");
+    expect(r.source.meta.pullRequest?.mergedAt).toBe("2026-03-04T09:30:00Z");
+    const s = ok(normalizeGithubSource(r));
+    expect(s.closedAt).toBe(r.source.meta.closedAt);
+    expect(s.github.pullRequest?.mergedAt).toBe(r.source.meta.pullRequest?.mergedAt);
+    expect(s.state).toBe("merged");
+    expect(s.createdAt).toBe(r.source.createdAt); // no timestamp rewritten
+    expect(s.updatedAt).toBe(r.source.updatedAt);
+  });
+
   it("closed-without-merge stays `closed`", async () => {
     const s = ok(normalizeGithubSource(await retrieved("pull_request", { ...pull, merged: false, merged_at: null })));
     expect(s.state).toBe("closed");
