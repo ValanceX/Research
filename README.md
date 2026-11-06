@@ -91,6 +91,18 @@ Options: `retrieveGithubSource(ref, { token?, fetch? })`, same defaults as disco
 
 **Not retrieved:** PR review comments, review submissions, inline threads, diffs/files, linked resources. Bodies are returned verbatim; nothing is summarized or classified.
 
+## Normalize a retrieved source
+
+```ts
+import { retrieveGithubSource, normalizeGithubSource } from "./src/index.js";
+
+const n = normalizeGithubSource(await retrieveGithubSource(ref)); // pure: no network, no mutation
+if (n.ok) n.source;      // NormalizedSource: platform-independent, `github` bags hold GitHub-only facts
+else n.failure.kind;     // retrieval_failed (incl. partial retrievals) | invalid_input
+```
+
+Only a *successful, complete* retrieval is normalized. Content is verbatim; unavailable values are explicit `null`; comment order is preserved. See `src/contracts/normalized.ts` for what each field means, what is deliberately dropped (`rateLimit`) and what retrieval never supplied (fetch time, reactions, edit history, review comments).
+
 ## Layout
 
 | File | Responsibility |
@@ -101,6 +113,8 @@ Options: `retrieveGithubSource(ref, { token?, fetch? })`, same defaults as disco
 | `src/github/discover.ts` | Query validation, paging, de-dup, limit |
 | `src/contracts/retrieval.ts` | Retrieval source / comment / failure / result types |
 | `src/github/parse-source.ts` | Zod validation + normalization of issue, PR and comment payloads (pure) |
+| `src/contracts/normalized.ts` | Platform-independent thread/comment/author types |
+| `src/normalize/github.ts` | Pure retrieval-result → `NormalizedSource` (validates input, no I/O) |
 | `src/github/retrieve.ts` | Reference validation, endpoint choice, comment paging, de-dup, ordering, failure mapping |
 
 ## Test
