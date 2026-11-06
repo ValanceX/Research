@@ -1,0 +1,1 @@
+{"compilerOptions":{"types":["node"],"target":"ES2022","module":"NodeNext","moduleResolution":"NodeNext","lib":["ES2022"],"strict":true,"noUncheckedIndexedAccess":true,"exactOptionalPropertyTypes":true,"noEmit":true,"esModuleInterop":true,"skipLibCheck":true,"isolatedModules":true,"allowImportingTsExtensions":false},"include":["src","tests"]}

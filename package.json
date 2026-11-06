@@ -1,0 +1,20 @@
+{
+  "name": "@valancex/research",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Research tooling: independently testable tools for investigating developer problems. Currently: shared discovery contracts + GitHub discovery.",
+  "type": "module",
+  "engines": { "node": ">=22.19" },
+  "exports": { ".": "./src/index.ts" },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:live": "vitest run --config vitest.live.config.ts"
+  },
+  "dependencies": { "zod": "^4.6.7" },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5"
+  }
+}
