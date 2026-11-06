@@ -103,6 +103,19 @@ else n.failure.kind;     // retrieval_failed (incl. partial retrievals) | invali
 
 Only a *successful, complete* retrieval is normalized. Content is verbatim; unavailable values are explicit `null`; comment order is preserved. See `src/contracts/normalized.ts` for what each field means, what is deliberately dropped (`rateLimit`) and what retrieval never supplied (fetch time, reactions, edit history, review comments).
 
+## Evidence contract and verifier (no extractor yet)
+
+`src/contracts/evidence.ts` defines `EvidenceItem` (Zod, strict): one speaker's statement as verbatim `support` passages, optional `context`, a `claim`, a `kind` (`problem | workaround | desired_outcome | solution_request | positive_experience | resolution`) and a `subject` (`speaker | speaker_and_others | others | unattributed`). There is no interpretation field.
+
+```ts
+import { verifyEvidence, evidenceId } from "./src/index.js";
+const { ok, violations } = verifyEvidence(normalizedSource, items); // pure; items may be untrusted
+```
+
+The verifier checks structure and traceability only: source identity, locations, exact excerpts, permalinks, single-speaker support (null speaker = one author slot), bot exclusion, `>`-quote-only support, context authors, derived ids and duplicates. Violation codes: `schema`, `source_mismatch`, `location_missing`, `text_not_found`, `url_mismatch`, `speaker_mismatch`, `null_speaker_multi_slot`, `bot_speaker`, `quote_only_support`, `context_author_mismatch`, `id_mismatch`, `duplicate_id`.
+
+It cannot judge claim fidelity, kind, `subject`, or quotes that lack a `>` marker (quote detection is deliberately limited to `>` lines). `evidenceId` = sha256 of platform, source id, kind and the sorted support set; claim, context, subject are excluded.
+
 ## Layout
 
 | File | Responsibility |
@@ -115,6 +128,8 @@ Only a *successful, complete* retrieval is normalized. Content is verbatim; unav
 | `src/github/parse-source.ts` | Zod validation + normalization of issue, PR and comment payloads (pure) |
 | `src/contracts/normalized.ts` | Platform-independent thread/comment/author types |
 | `src/normalize/github.ts` | Pure retrieval-result → `NormalizedSource` (validates input, no I/O) |
+| `src/contracts/evidence.ts` | Evidence item Zod schema and types |
+| `src/evidence/{units,id,verify}.ts` | `textUnits`/`quotedLineRanges`, `evidenceId`, `verifyEvidence` |
 | `src/github/retrieve.ts` | Reference validation, endpoint choice, comment paging, de-dup, ordering, failure mapping |
 
 ## Test

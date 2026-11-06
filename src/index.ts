@@ -4,3 +4,7 @@ export type * from "./contracts/retrieval.js";
 export { retrieveGithubSource, type RetrieveOptions } from "./github/retrieve.js";
 export type * from "./contracts/normalized.js";
 export { normalizeGithubSource } from "./normalize/github.js";
+export * from "./contracts/evidence.js";
+export { evidenceId } from "./evidence/id.js";
+export { locationKey, quotedLineRanges, textUnits, type TextUnit } from "./evidence/units.js";
+export { verifyEvidence, type VerificationResult, type Violation, type ViolationCode } from "./evidence/verify.js";
