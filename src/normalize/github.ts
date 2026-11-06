@@ -67,6 +67,7 @@ export function normalizeGithubSource(retrieval: RetrievalResult): Normalization
 
   const pr = s.meta.pullRequest;
   if (s.type === "pull_request" && pr === undefined) return invalid("pull_request source is missing meta.pullRequest");
+  if (s.state === "open" && pr?.merged) return invalid("pull request is open but marked merged");
   if (s.type === "issue" && pr !== undefined) return invalid("issue source must not have meta.pullRequest");
 
   return {

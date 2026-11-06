@@ -130,6 +130,7 @@ describe("rejected input", () => {
     ["unknown state", { source: { state: "weird" } }],
     ["PR without pullRequest meta", { source: { type: "pull_request", meta: { pullRequest: undefined } } }],
     ["issue with pullRequest meta", { source: { meta: { pullRequest: { draft: false, merged: false, mergedAt: null } } } }],
+    ["open PR flagged merged", { source: { state: "open", type: "pull_request", meta: { pullRequest: { draft: false, merged: true, mergedAt: "2026-03-04T09:00:00Z" } } } }],
     ["malformed comment", { comments: [{ id: "" }] }],
   ])("invalid input: %s", async (_n, patch) => {
     const good = await retrieved("issue", issue);
