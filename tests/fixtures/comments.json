@@ -1,0 +1,16 @@
+[
+  {
+    "node_id": "IC_kwDOAAAA10", "id": 10, "body": "I can reproduce.\n\n> quoted\n\n<details>raw html</details>",
+    "user": { "login": "alice", "id": 1, "type": "User" },
+    "created_at": "2026-03-01T12:00:00Z", "updated_at": "2026-03-01T12:05:00Z",
+    "html_url": "https://github.com/angular/angular/issues/101#issuecomment-10",
+    "author_association": "MEMBER", "reactions": { "total_count": 1 }
+  },
+  {
+    "node_id": "IC_kwDOAAAA11", "id": 11, "body": "Thanks — fixed in #202.",
+    "user": { "login": "dependabot[bot]", "id": 2, "type": "Bot" },
+    "created_at": "2026-03-02T08:00:00Z", "updated_at": "2026-03-02T08:00:00Z",
+    "html_url": "https://github.com/angular/angular/issues/101#issuecomment-11",
+    "author_association": "NONE"
+  }
+]

@@ -2,7 +2,7 @@
 
 An independent Git repository (own history, own package). It has no dependency on, and no imports from, `nexus/`, `mesh/`, `port/` or `valance/`; it merely sits next to them in the `@Valance` namespace folder.
 
-Independently testable tools for investigating developer problems. This package currently contains **one tool: GitHub discovery** (plus the shared contract it speaks).
+Independently testable tools for investigating developer problems. This package currently contains **two tools**, each usable on its own: **GitHub discovery** (find references) and **GitHub source retrieval** (fetch one referenced issue/PR and its conversation comments).
 
 Discovery only *locates* public issues / pull requests and returns references. It does not fetch bodies or comments, extract problems, classify, summarize, persist, or schedule.
 
@@ -57,6 +57,40 @@ Interrupted paging is a fourth, different case: it's `ok: false` + `partial`, ne
 
 To check you saw everything the query matches: `totalMatches <= 1000 && refs.length === totalMatches && !sourceIncomplete`. Otherwise treat the result as a sample. Discovery does not set a "complete" flag, because that answer is derived from these fields.
 
+## Retrieve a source
+
+```ts
+import { discoverGithub, retrieveGithubSource } from "./src/index.js";
+
+const found = await discoverGithub({ text: "hydration", repo: "withastro/astro", limit: 5 });
+if (found.ok && found.refs[0]) {
+  const r = await retrieveGithubSource(found.refs[0]);   // takes a DiscoveryRef as-is
+  if (r.ok) {
+    r.source;    // id, type, repo, number, title, body (verbatim, or null), author, state, url, timestamps, meta
+    r.comments;  // conversation comments, oldest first, de-duplicated: id, databaseId, author, body, url, timestamps, authorAssociation
+  } else {
+    r.failure.kind; // invalid_reference | auth | forbidden | not_found | rate_limited | network | service | unexpected_response
+    r.partial;      // only if the source was fetched and comment paging then failed: valid but INCOMPLETE
+  }
+}
+```
+
+Options: `retrieveGithubSource(ref, { token?, fetch? })`, same defaults as discovery. Reference types are validated at runtime, so refs deserialized from JSON are fine.
+
+**Endpoints:** issue → `GET /repos/{r}/issues/{n}`; pull request → `GET /repos/{r}/pulls/{n}`; comments for both → `GET /repos/{r}/issues/{n}/comments` (100 per page, until a short page).
+
+**What "success" means:** the source validated, its id matched the reference, and every comment page was fetched and validated. It is a point-in-time read, not an atomic snapshot: comments added or deleted during paging can be missed, and `source.meta.commentCount` is GitHub's count at fetch time, so it can differ from `comments.length`.
+
+| `ok` | `partial` | meaning |
+|---|---|---|
+| `true` | n/a | complete |
+| `false` | absent | failed before the source was retrieved; nothing usable |
+| `false` | present | source retrieved, comment paging failed; `partial.comments` may be empty or incomplete |
+
+`not_found` also covers private repos the token cannot see (GitHub answers 404). `forbidden` is a 403 that is not rate limiting. No retry, resume or checkpointing; re-run to get the rest.
+
+**Not retrieved:** PR review comments, review submissions, inline threads, diffs/files, linked resources. Bodies are returned verbatim; nothing is summarized or classified.
+
 ## Layout
 
 | File | Responsibility |
@@ -65,11 +99,14 @@ To check you saw everything the query matches: `totalMatches <= 1000 && refs.len
 | `src/github/transport.ts` | One authenticated GET → JSON or explicit failure (HTTP status mapping, rate-limit headers) |
 | `src/github/parse.ts` | Zod validation + normalization of a search page (pure) |
 | `src/github/discover.ts` | Query validation, paging, de-dup, limit |
+| `src/contracts/retrieval.ts` | Retrieval source / comment / failure / result types |
+| `src/github/parse-source.ts` | Zod validation + normalization of issue, PR and comment payloads (pure) |
+| `src/github/retrieve.ts` | Reference validation, endpoint choice, comment paging, de-dup, ordering, failure mapping |
 
 ## Test
 
 ```sh
 pnpm typecheck
 pnpm test          # deterministic; no network
-GITHUB_TOKEN=... pnpm test:live   # opt-in, read-only: auth, paging past 100, date window, bad-token; skips without a token
+GITHUB_TOKEN=... pnpm test:live   # opt-in, read-only: discovery (4 tests) + retrieval (5 tests); skips without a token
 ```

@@ -9,7 +9,8 @@ export type FetchLike = typeof fetch;
 
 export type TransportResult =
   | { ok: true; json: unknown; rateLimit: RateLimitInfo }
-  | { ok: false; failure: DiscoveryFailure };
+  // `status` is set when GitHub answered with an HTTP error (absent for network/parse failures).
+  | { ok: false; failure: DiscoveryFailure; status?: number };
 
 function readRateLimit(h: Headers): RateLimitInfo {
   const remaining = h.get("x-ratelimit-remaining");
@@ -67,15 +68,15 @@ export async function githubGet(
         retryAfterSeconds: Number(retryAfter),
       }),
       ...(rateLimit.resetAt !== undefined && { resetAt: rateLimit.resetAt }),
-    });
+    }, res.status);
   }
-  if (res.status === 401 || res.status === 403) return fail({ kind: "auth", message });
-  if (res.status >= 500) return fail({ kind: "service", message, status: res.status });
-  return fail({ kind: "invalid_query", message }); // 400, 404, 422, ...
+  if (res.status === 401 || res.status === 403) return fail({ kind: "auth", message }, res.status);
+  if (res.status >= 500) return fail({ kind: "service", message, status: res.status }, res.status);
+  return fail({ kind: "invalid_query", message }, res.status); // 400, 404, 422, ...
 }
 
-function fail(failure: DiscoveryFailure): TransportResult {
-  return { ok: false, failure };
+function fail(failure: DiscoveryFailure, status?: number): TransportResult {
+  return { ok: false, failure, ...(status !== undefined && { status }) };
 }
 
 function extractMessage(body: string): string {

@@ -1,0 +1,17 @@
+{
+  "node_id": "I_kwDOAAAA1",
+  "number": 101,
+  "title": "Signals: effect runs twice on init",
+  "body": "Steps:\r\n\r\n1. render `<App/>`  \r\n2. observe **two** runs\r\n\r\n```ts\neffect(() => log(x()));\n```\n\nünïcode ✓ — trailing space ",
+  "user": { "login": "octocat", "id": 583231, "type": "User", "site_admin": false },
+  "state": "open",
+  "html_url": "https://github.com/angular/angular/issues/101",
+  "created_at": "2026-03-01T10:00:00Z",
+  "updated_at": "2026-03-02T11:30:00Z",
+  "closed_at": null,
+  "locked": false,
+  "author_association": "CONTRIBUTOR",
+  "comments": 2,
+  "labels": [{ "name": "area: core" }, { "name": "bug" }],
+  "reactions": { "total_count": 3 }
+}
