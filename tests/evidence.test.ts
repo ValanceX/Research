@@ -43,12 +43,12 @@ const deepFreeze = <T>(o: T): T => { if (o && typeof o === "object") { Object.va
 const e1 = item(real, {
   speaker: octocat, subject: "unattributed", claim: "An effect runs twice during initialization when rendering <App/>.",
   support: [P(title, "Signals: effect runs twice on init", U.thread), P(body, "2. observe **two** runs", U.thread)],
-  context: [{ ...P(body, "1. render `<App/>`", U.thread), author: octocat }],
+  context: [{ ...P(body, "1. render `<App/>`", U.thread), unitAuthor: octocat }],
 });
 const e2 = item(real, {
   speaker: alice, subject: "speaker", claim: "alice reports reproducing the effect running twice on init.",
   support: [P(com(C10), "I can reproduce.", U.c10)],
-  context: [{ ...P(title, "Signals: effect runs twice on init", U.thread), author: octocat }],
+  context: [{ ...P(title, "Signals: effect runs twice on init", U.thread), unitAuthor: octocat }],
 });
 
 describe("valid evidence", () => {
@@ -77,7 +77,7 @@ describe("valid evidence", () => {
     const carol = { handle: "carol", kind: "user" } as const;
     const ok = item(s, {
       speaker: carol, subject: "speaker", support: [P(com("IC_q"), "same here on 17.2", s.comments[0]!.url)],
-      context: [{ ...P(com("IC_q"), "effect runs twice on init", s.comments[0]!.url), author: carol }],
+      context: [{ ...P(com("IC_q"), "effect runs twice on init", s.comments[0]!.url), unitAuthor: carol }],
     });
     expect(verifyEvidence(s, [ok]).ok).toBe(true);
   });
@@ -189,11 +189,11 @@ describe("quoted material", () => {
 
 describe("context", () => {
   it("rejects a context author that differs from the unit's author", () => {
-    const bad = item(real, { speaker: alice, support: [P(com(C10), "I can reproduce.", U.c10)], context: [{ ...P(title, "Signals: effect runs twice on init", U.thread), author: alice }] });
+    const bad = item(real, { speaker: alice, support: [P(com(C10), "I can reproduce.", U.c10)], context: [{ ...P(title, "Signals: effect runs twice on init", U.thread), unitAuthor: alice }] });
     expect(codes(real, bad)).toEqual(["context_author_mismatch"]);
   });
   it("applies location/text/url checks to context too", () => {
-    const bad = item(real, { speaker: alice, support: [P(com(C10), "I can reproduce.", U.c10)], context: [{ ...P(title, "not the title", U.thread), author: octocat }] });
+    const bad = item(real, { speaker: alice, support: [P(com(C10), "I can reproduce.", U.c10)], context: [{ ...P(title, "not the title", U.thread), unitAuthor: octocat }] });
     expect(codes(real, bad)).toEqual(["text_not_found"]);
   });
 });

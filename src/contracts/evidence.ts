@@ -29,8 +29,11 @@ export type Location = z.infer<typeof locationSchema>;
 export const passageSchema = z.strictObject({ location: locationSchema, text: z.string().min(1), url: z.url() });
 export type Passage = z.infer<typeof passageSchema>;
 
-/** Context also records the UNIT's author, which may differ from who wrote the passage (e.g. a quote). */
-export const contextPassageSchema = passageSchema.extend({ author: personSchema });
+/**
+ * Context also records `unitAuthor`: the author of the source UNIT containing the passage. It is NOT
+ * necessarily who wrote the passage itself (e.g. quoted text inside a reply was written by someone else).
+ */
+export const contextPassageSchema = passageSchema.extend({ unitAuthor: personSchema });
 export type ContextPassage = z.infer<typeof contextPassageSchema>;
 
 export const evidenceKinds = ["problem", "workaround", "desired_outcome", "solution_request", "positive_experience", "resolution"] as const;

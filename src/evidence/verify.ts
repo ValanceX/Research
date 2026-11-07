@@ -19,7 +19,7 @@ export type ViolationCode =
   | "null_speaker_multi_slot" // speaker is null but support spans more than one author slot
   | "bot_speaker" // speaker is a bot
   | "quote_only_support" // every occurrence of a support passage touches a `>` line
-  | "context_author_mismatch" // context.author differs from the unit's author
+  | "context_author_mismatch" // context.unitAuthor differs from the unit's author
   | "id_mismatch" // id is not the derived id
   | "duplicate_id"; // same id earlier in this batch
 
@@ -91,7 +91,7 @@ export function verifyEvidence(source: NormalizedSource, items: readonly unknown
 
     it.context.forEach((p, i) => {
       const found = locate(p, `context[${i}]`);
-      if (found && !samePerson(found.unit.author, p.author)) add("context_author_mismatch", `context[${i}].author is ${JSON.stringify(p.author)}, unit author is ${JSON.stringify(found.unit.author)}`);
+      if (found && !samePerson(found.unit.author, p.unitAuthor)) add("context_author_mismatch", `context[${i}].unitAuthor is ${JSON.stringify(p.unitAuthor)}, unit author is ${JSON.stringify(found.unit.author)}`);
     });
 
     if (it.id !== evidenceId(it)) add("id_mismatch", `id ${it.id} is not the derived id`);

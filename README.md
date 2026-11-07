@@ -114,6 +114,19 @@ const { ok, violations } = verifyEvidence(normalizedSource, items); // pure; ite
 
 The verifier checks structure and traceability only: source identity, locations, exact excerpts, permalinks, single-speaker support (null speaker = one author slot), bot exclusion, `>`-quote-only support, context authors, derived ids and duplicates. Violation codes: `schema`, `source_mismatch`, `location_missing`, `text_not_found`, `url_mismatch`, `speaker_mismatch`, `null_speaker_multi_slot`, `bot_speaker`, `quote_only_support`, `context_author_mismatch`, `id_mismatch`, `duplicate_id`.
 
+Context passages carry `unitAuthor`: the author of the *unit* containing the passage, not necessarily of quoted words inside it.
+
+### Draft assembly
+
+An extractor produces only `EvidenceDraft`s (`unitId` + exact `text` excerpts, `kind`, `subject`, `claim`). `assembleEvidence(source, drafts)` derives everything else (source ref, urls, speaker, `unitAuthor`, id) and runs `verifyEvidence`. It is all-or-nothing and never repairs excerpts:
+
+```ts
+const r = assembleEvidence(normalizedSource, drafts); // drafts: unknown (e.g. parsed model output)
+// r.ok ? r.items (verified; [] is valid) : r.failure
+```
+
+Failures: `invalid_source`, `invalid_drafts`, `unresolved` (per excerpt: `unit_not_found`, `excerpt_not_found`, `excerpt_ambiguous` when the text occurs more than once in its unit) and `verification_failed` (the verifier's violations). Unit ids are `title`, `body`, `comment:<id>`.
+
 It cannot judge claim fidelity, kind, `subject`, or quotes that lack a `>` marker (quote detection is deliberately limited to `>` lines). `evidenceId` = sha256 of platform, source id, kind and the sorted support set; claim, context, subject are excluded.
 
 ## Layout
@@ -129,6 +142,8 @@ It cannot judge claim fidelity, kind, `subject`, or quotes that lack a `>` marke
 | `src/contracts/normalized.ts` | Platform-independent thread/comment/author types |
 | `src/normalize/github.ts` | Pure retrieval-result → `NormalizedSource` (validates input, no I/O) |
 | `src/contracts/evidence.ts` | Evidence item Zod schema and types |
+| `src/contracts/evidence-draft.ts` | `EvidenceDraft`: what an extractor must produce |
+| `src/evidence/assemble.ts` | `assembleEvidence`: drafts → verified items, all-or-nothing |
 | `src/evidence/{units,id,verify}.ts` | `textUnits`/`quotedLineRanges`, `evidenceId`, `verifyEvidence` |
 | `src/github/retrieve.ts` | Reference validation, endpoint choice, comment paging, de-dup, ordering, failure mapping |
 

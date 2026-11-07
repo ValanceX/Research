@@ -8,3 +8,5 @@ export * from "./contracts/evidence.js";
 export { evidenceId } from "./evidence/id.js";
 export { locationKey, quotedLineRanges, textUnits, type TextUnit } from "./evidence/units.js";
 export { verifyEvidence, type VerificationResult, type Violation, type ViolationCode } from "./evidence/verify.js";
+export * from "./contracts/evidence-draft.js";
+export { assembleEvidence, type AssemblyFailure, type AssemblyResult, type UnresolvedExcerpt } from "./evidence/assemble.js";
